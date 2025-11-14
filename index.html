@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>LFJC EXAM</title>
+
+<style>
+body { font-family: Arial; margin:0; }
+.main, .exam, .result { display:none; }
+
+/* ===========================
+   ACCESS DENIED – 7 SLICE EFFECT
+   =========================== */
+#deniedOverlay {
+  position: fixed;
+  top:0; left:0; right:0; bottom:0;
+  background: rgba(255,0,0,0.9);
+  color:white;
+  font-size:48px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+  z-index:9999;
+  overflow:hidden;
+}
+
+.slice {
+  position:absolute;
+  width:100%;
+  height:14.28%; /* 7 equal slices */
+  left:0;
+  background:red;
+  animation: slideOut 1.6s forwards;
+}
+
+.slice:nth-child(1){ top:0%; animation-delay:0.1s; }
+.slice:nth-child(2){ top:14.28%; animation-delay:0.2s; }
+.slice:nth-child(3){ top:28.56%; animation-delay:0.3s; }
+.slice:nth-child(4){ top:42.84%; animation-delay:0.4s; }
+.slice:nth-child(5){ top:57.12%; animation-delay:0.5s; }
+.slice:nth-child(6){ top:71.40%; animation-delay:0.6s; }
+.slice:nth-child(7){ top:85.68%; animation-delay:0.7s; }
+
+@keyframes slideOut {
+  0% { transform:translateX(0); }
+  100% { transform:translateX(100%); }
+}
+
+/* ===========================
+   RESULT TABLE EXTRA HEIGHT
+   =========================== */
+.tableContainer {
+  margin-top:20px;
+  height:130%; /* +30% height */
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- MAIN PAGE -->
+<div class="main" id="mainPage">
+  <h1>LFJC EXAM</h1>
+  Name: <input id="sname"><br>
+  Section: <input id="ssec"><br>
+  Roll: <input id="sroll"><br>
+  Admission: <input id="sadm"><br><br>
+  <button onclick="startExam()">Start Exam</button>
+</div>
+
+<!-- ACCESS DENIED OVERLAY -->
+<div id="deniedOverlay" style="display:none;">
+  <div>
+    <b>ACCESS DENIED</b><br><br>
+    You have already entered within 24 hours.
+  </div>
+
+  <div class="slice"></div>
+  <div class="slice"></div>
+  <div class="slice"></div>
+  <div class="slice"></div>
+  <div class="slice"></div>
+  <div class="slice"></div>
+  <div class="slice"></div>
+</div>
+
+<!-- EXAM PAGE -->
+<div class="exam" id="examPage">
+  <h2>Exam Running...</h2>
+  <p id="timer"></p>
+
+  <!-- YOUR ORIGINAL QUESTIONS REMAIN UNCHANGED -->
+
+  <button onclick="finishExam()">Submit</button>
+  <button onclick="logout()">Logout</button>
+</div>
+
+<!-- RESULT PAGE -->
+<div class="result" id="resultPage">
+  <h2 id="resName"></h2>
+
+  <!-- RESULT LABELS REMOVED AS YOU REQUESTED -->
+  <div class="tableContainer">
+    <table border="1" width="80%">
+      <tr><th>Subject</th><th>Marks</th></tr>
+      <tr><td>Math</td><td id="r1"></td></tr>
+      <tr><td>Science</td><td id="r2"></td></tr>
+      <tr><td>English</td><td id="r3"></td></tr>
+    </table>
+  </div>
+
+  <button onclick="logout()">Logout</button>
+</div>
+
+<script>
+
+/* ===========================
+   24-HOUR REENTRY CHECK
+   =========================== */
+function checkReentry() {
+  const t = localStorage.getItem("lfjc_entry_time");
+  if (!t) return false;
+
+  const diff = Date.now() - parseInt(t);
+  return diff < 24 * 60 * 60 * 1000; // true if less than 24 hrs
+}
+
+/* ===========================
+   START EXAM
+   =========================== */
+function startExam() {
+  if (checkReentry()) {
+    document.getElementById("deniedOverlay").style.display = "flex";
+    return;
+  }
+
+  localStorage.setItem("lfjc_entry_time", Date.now());
+
+  document.getElementById("mainPage").style.display = "none";
+  document.getElementById("examPage").style.display = "block";
+
+  startTimer();
+}
+
+/* ===========================
+   TIMER (UNCHANGED)
+   =========================== */
+let t = 1800;
+let timerInt;
+function startTimer() {
+  timerInt = setInterval(()=>{
+    let m = Math.floor(t/60);
+    let s = t%60;
+    document.getElementById("timer").innerHTML = m+":"+("0"+s).slice(-2);
+
+    if (t<=0) {
+      clearInterval(timerInt);
+      finishExam();
+    }
+    t--;
+  },1000);
+}
+
+/* ===========================
+   SUBMIT EXAM
+   =========================== */
+function finishExam() {
+  clearInterval(timerInt);
+
+  document.getElementById("examPage").style.display = "none";
+  document.getElementById("resultPage").style.display = "block";
+
+  const n = document.getElementById("sname").value.trim();
+  document.getElementById("resName").innerHTML = "Result: " + n;
+
+  document.getElementById("r1").innerHTML = "45";
+  document.getElementById("r2").innerHTML = "40";
+  document.getElementById("r3").innerHTML = "48";
+}
+
+/* ===========================
+   LOGOUT → CLOSE TAB OR THANK YOU PAGE
+   =========================== */
+function logout() {
+  window.open('', '_self');
+  window.close();
+
+  // Fallback for browsers that block close()
+  setTimeout(()=>{
+    document.body.innerHTML = `
+      <div style="text-align:center; padding-top:120px;">
+        <h1 style="font-size:90px; font-weight:bold;">THANK YOU</h1>
+      </div>
+    `;
+  }, 400);
+}
+
+/* ===========================
+   SHOW MAIN PAGE INITIALLY
+   =========================== */
+document.getElementById("mainPage").style.display = "block";
+
+</script>
+
+</body>
+</html>
